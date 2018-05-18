@@ -1,0 +1,5 @@
+repositories:
+    - name: lpan
+      type: CPAN
+    - name: cpan-mirror
+      type: CPAN

@@ -2,11 +2,29 @@
 
 use v6;
 
+use Config;
+
 use Shelve6::Logging;
 
+my $config-file = 'config.yaml';
+
 my $log = Shelve6::Logging.new('main');
+my $config = Config.new();
 
 $log.info("Shelve6 starting...");
+$log.debug("reading config from $config-file...");
+# XXX validate top level keys and that the top is a hash, and that repositories
+# is a list
+$config.read($config-file);
+for @($config.get<repositories>) -> $repo {
+    # XXX make sure names are unique
+    say "# " ~ $repo.perl;
+    my $repo-type = 'Shelve6::Repository::' ~ $repo<type>;
+    require ::($repo-type); # XXX catch excpetion from this
+    my $repo-object = ::($repo-type).new(name => $repo<name>);
+    say $repo-object.WHAT;
+}
+
 
 # XXX find and register all plugins, registering could find sub-plugins
 # XXX read cmdline args
