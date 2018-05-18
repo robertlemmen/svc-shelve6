@@ -1,0 +1,84 @@
+#!/usr/bin/env perl6
+
+use v6;
+
+use Shelve6::Logging;
+
+my $log = Shelve6::Logging.new('main');
+
+$log.info("Shelve6 starting...");
+
+# XXX find and register all plugins, registering could find sub-plugins
+# XXX read cmdline args
+# XXX read and validate config, init plugin instances. create
+#     Config::Parser::JSON module for this
+
+
+# use Cro;
+# use Cro::HTTP::Request;
+# use Cro::HTTP::RequestParser;
+# use Cro::HTTP::Response;
+# use Cro::HTTP::ResponseSerializer;
+# use Cro::TCP;
+# use JSON::Fast;
+# 
+# 
+# my $package-data = [{  "name" => "JSON::Hjson",
+#                         "source-url" => "http://www.cpan.org/authors/id/A/AK/AKIYM/Perl6/JSON-Hjson-0.0.1.tar.gz",
+#                         "perl" => "6.c",
+#                         "resources" => [ ],
+#                         "build-depends" => [ ],
+#                         "depends" => [ ],
+#                         "test-depends" => [
+#                             "JSON::Tiny",
+#                             "Test::META"
+#                         ],
+#                         "tags" => [ ],
+#                         "provides" => {
+#                             "JSON::Hjson" => "lib/JSON/Hjson.pm6",
+#                             "JSON::Hjson::Grammar" => "lib/JSON/Hjson/Grammar.pm6",
+#                             "JSON::Hjson::Actions" => "lib/JSON/Hjson/Actions.pm6"
+#                         },
+#                         "license" => "Artistic-2.0",
+#                         "version" => "0.0.1",
+#                         "description" => "Human JSON (Hjson) deserializer",
+#                         "authors" => [
+#                             "Takumi Akiyama"
+#                         ]
+#                     },
+#                    ];
+# 
+# class HTTPHello does Cro::Transform {
+#     method consumes() { Cro::HTTP::Request }
+#     method produces() { Cro::HTTP::Response }
+# 
+#     method transformer($request-stream) {
+#         supply {
+#             whenever $request-stream -> $request {
+#                 say "Request to " ~ $request.path;
+#                 given Cro::HTTP::Response.new(:200status) {
+#                     .append-header('Content-type', 'application/json');
+#                     .set-body(to-json($package-data));
+#                     .emit;
+#                 }
+#             }
+#         }
+#     }
+# }
+# 
+# my Cro::Service $http-service = Cro.compose(
+#     Cro::TCP::Listener.new( :host('localhost'), :port(8080) ),
+#     Cro::HTTP::RequestParser.new,
+#     HTTPHello,
+#     Cro::HTTP::ResponseSerializer.new
+# );
+# 
+# $http-service.start;
+# signal(SIGINT).tap: {
+#     note "Shutting down...";
+#     $http-service.stop;
+#     exit;
+# }
+# sleep;
+# 
+# 
