@@ -6,7 +6,7 @@ my $max-ctx-width = 0;
 
 my $date-fmt = sub ($self) {
     given $self {
-        sprintf "%04d/%02d/%02d %02d:%02d:%06.3f",
+        sprintf "%04d-%02d-%02d %02d:%02d:%06.3f ",
             .year, .month, .day,
             .hour, .minute, .second
     }

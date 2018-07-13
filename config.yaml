@@ -1,5 +1,8 @@
+server:
+    port: 8080
+store:
+    type: FileSystem
+    basedir: /home/robertle/work/shalve6/store
 repositories:
-    - name: lpan
-      type: CPAN
-    - name: cpan-mirror
+    - name: p6repo
       type: CPAN

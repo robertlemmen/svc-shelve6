@@ -5,98 +5,56 @@ use v6;
 use Config;
 
 use Shelve6::Logging;
+use Shelve6::Server;
 
 my $config-file = 'config.yaml';
 
 my $log = Shelve6::Logging.new('main');
 my $config = Config.new();
 
+my @repositories;
+
 $log.info("Shelve6 starting...");
-$log.debug("reading config from $config-file...");
+$log.debug("Reading config from $config-file...");
 # XXX validate top level keys and that the top is a hash, and that repositories
 # is a list
 $config.read($config-file);
 for @($config.get<repositories>) -> $repo {
     # XXX make sure names are unique
-    say "# " ~ $repo.perl;
     my $repo-type = 'Shelve6::Repository::' ~ $repo<type>;
     require ::($repo-type); # XXX catch excpetion from this
-    my $repo-object = ::($repo-type).new(name => $repo<name>);
-    say $repo-object.WHAT;
+    my $repo-object = ::($repo-type).new();
+    $repo-object.configure($repo);
+    push @repositories, $repo-object;
 }
 
+my $server = Shelve6::Server.new();
+$server.configure($config.get<server>);
 
-# XXX find and register all plugins, registering could find sub-plugins
-# XXX read cmdline args
-# XXX read and validate config, init plugin instances. create
-#     Config::Parser::JSON module for this
+my $store-cfg = $config.get<store>;
+my $store-type = 'Shelve6::Store::' ~ $store-cfg<type>;
+require ::($store-type); # XXX catch excpetion from this
+my $store = ::($store-type).new();
+$store.configure($store-cfg);
 
+$store.start;
+$log.debug("Starting components...");
+for @repositories -> $repo {
+    $repo.set-server($server);
+    $repo.set-store($store);
+    $repo.start;
+}
+$server.start;
 
-# use Cro;
-# use Cro::HTTP::Request;
-# use Cro::HTTP::RequestParser;
-# use Cro::HTTP::Response;
-# use Cro::HTTP::ResponseSerializer;
-# use Cro::TCP;
-# use JSON::Fast;
-# 
-# 
-# my $package-data = [{  "name" => "JSON::Hjson",
-#                         "source-url" => "http://www.cpan.org/authors/id/A/AK/AKIYM/Perl6/JSON-Hjson-0.0.1.tar.gz",
-#                         "perl" => "6.c",
-#                         "resources" => [ ],
-#                         "build-depends" => [ ],
-#                         "depends" => [ ],
-#                         "test-depends" => [
-#                             "JSON::Tiny",
-#                             "Test::META"
-#                         ],
-#                         "tags" => [ ],
-#                         "provides" => {
-#                             "JSON::Hjson" => "lib/JSON/Hjson.pm6",
-#                             "JSON::Hjson::Grammar" => "lib/JSON/Hjson/Grammar.pm6",
-#                             "JSON::Hjson::Actions" => "lib/JSON/Hjson/Actions.pm6"
-#                         },
-#                         "license" => "Artistic-2.0",
-#                         "version" => "0.0.1",
-#                         "description" => "Human JSON (Hjson) deserializer",
-#                         "authors" => [
-#                             "Takumi Akiyama"
-#                         ]
-#                     },
-#                    ];
-# 
-# class HTTPHello does Cro::Transform {
-#     method consumes() { Cro::HTTP::Request }
-#     method produces() { Cro::HTTP::Response }
-# 
-#     method transformer($request-stream) {
-#         supply {
-#             whenever $request-stream -> $request {
-#                 say "Request to " ~ $request.path;
-#                 given Cro::HTTP::Response.new(:200status) {
-#                     .append-header('Content-type', 'application/json');
-#                     .set-body(to-json($package-data));
-#                     .emit;
-#                 }
-#             }
-#         }
-#     }
-# }
-# 
-# my Cro::Service $http-service = Cro.compose(
-#     Cro::TCP::Listener.new( :host('localhost'), :port(8080) ),
-#     Cro::HTTP::RequestParser.new,
-#     HTTPHello,
-#     Cro::HTTP::ResponseSerializer.new
-# );
-# 
-# $http-service.start;
-# signal(SIGINT).tap: {
-#     note "Shutting down...";
-#     $http-service.stop;
-#     exit;
-# }
-# sleep;
-# 
-# 
+$log.debug("Application initialization complete!");
+signal(SIGINT).tap: {
+    $log.debug("Shutting down components...");
+    $server.stop;
+    for @repositories -> $repo {
+        $repo.stop;
+    }
+    $store.stop;
+    $log.info("Clean shutdown, see you later!");
+    exit;
+}
+sleep;
