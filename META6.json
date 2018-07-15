@@ -1,0 +1,17 @@
+{
+    "perl" : "6.*",
+    "name" : "Shelve6",
+    "description" : "Artifact repository for Perl 6 and friends",
+    "authors" : [
+        "Robert Lemmen"
+    ],
+    "depends" : [
+        "Configure",
+        "Cro",
+        "JSON::Fast"
+    ],
+    "provides" : {
+    },
+    "license" : "Artistic-2.0",
+    "source-url" : "https://github.com/robertlemmen/shelve6.git"
+}
