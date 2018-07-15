@@ -6,7 +6,8 @@
         "Robert Lemmen"
     ],
     "depends" : [
-        "Configure",
+        "Config",
+        "Config::Parser::json",
         "Cro",
         "JSON::Fast"
     ],

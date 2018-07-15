@@ -43,8 +43,8 @@ $store.configure($store-cfg);
 $store.start;
 $log.debug("Starting components...");
 for @repositories -> $repo {
-    $repo.set-server($server);
-    $repo.set-store($store);
+    $repo.register-server($server);
+    $repo.register-store($store);
     $repo.start;
 }
 $server.start;
