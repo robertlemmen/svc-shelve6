@@ -1,4 +1,6 @@
-unit class Shelve6::Repository::CPAN;
+use Shelve6::Repository;
+
+unit class Shelve6::Repository::CPAN does Shelve6::Repository;
 
 has $!name;
 has $!server;

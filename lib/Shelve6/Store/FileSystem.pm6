@@ -1,4 +1,6 @@
-unit class Shelve6::Store::FileSystem;
+use Shelve6::Store;
+
+unit class Shelve6::Store::FileSystem does Shelve6::Store;
 
 has $!basedir;
 

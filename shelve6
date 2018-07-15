@@ -5,7 +5,10 @@ use v6;
 use Config;
 
 use Shelve6::Logging;
-use Shelve6::Server;
+use Shelve6::Server::HttpServer;
+
+# XXX use'ing a role that 'does' another role but has no methods in them leads
+# to confusing messages, and the exact message seems non-deterministic
 
 my $config-file = 'config.yaml';
 
@@ -28,7 +31,7 @@ for @($config.get<repositories>) -> $repo {
     push @repositories, $repo-object;
 }
 
-my $server = Shelve6::Server.new();
+my $server = Shelve6::Server::HttpServer.new();
 $server.configure($config.get<server>);
 
 my $store-cfg = $config.get<store>;

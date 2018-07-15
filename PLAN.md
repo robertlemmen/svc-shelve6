@@ -18,7 +18,7 @@ Ideas:
 - web service
 - /ui/ /api/ and /repos
 - /repos/<reponame> to support multiple logical repos
-- post to the repo to submit a tarball
+- post to the repo to submit a tarball, possibly as form-encoded
 - get list from repo in cpan format /repos/<reponame>/packages.json
 - entries in there are enriched meta files from tarball
 - submission means a few steps to extract/verify
