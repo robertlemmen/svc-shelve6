@@ -1,4 +1,14 @@
-use Shelve6::Component;
+unit class Shelve6::Store;
 
-unit role Shelve6::Store does Shelve6::Component;
+has $!basedir;
 
+method configure(%options) {
+    # XXX validate and more options
+    $!basedir = %options<basedir>;
+}
+
+method start() {
+}
+
+method stop() {
+}

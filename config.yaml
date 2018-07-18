@@ -1,8 +1,6 @@
 server:
     port: 8080
 store:
-    type: FileSystem
-    basedir: /home/robertle/work/shalve6/store
+    basedir: /home/robertle/work/shelve6/store
 repositories:
     - name: p6repo
-      type: CPAN

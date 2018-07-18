@@ -5,10 +5,9 @@ use v6;
 use Config;
 
 use Shelve6::Logging;
-use Shelve6::Server::HttpServer;
-
-# XXX use'ing a role that 'does' another role but has no methods in them leads
-# to confusing messages, and the exact message seems non-deterministic
+use Shelve6::Server;
+use Shelve6::Store;
+use Shelve6::Repository;
 
 my $config-file = 'config.yaml';
 
@@ -23,22 +22,17 @@ $log.debug("Reading config from $config-file...");
 # is a list
 $config.read($config-file);
 for @($config.get<repositories>) -> $repo {
-    # XXX make sure names are unique
-    my $repo-type = 'Shelve6::Repository::' ~ $repo<type>;
-    require ::($repo-type); # XXX catch excpetion from this
-    my $repo-object = ::($repo-type).new();
+    my $repo-object = Shelve6::Repository.new();
     $repo-object.configure($repo);
     push @repositories, $repo-object;
 }
 
-my $server = Shelve6::Server::HttpServer.new();
+my $server = Shelve6::Server.new();
 $server.configure($config.get<server>);
 
 my $store-cfg = $config.get<store>;
-my $store-type = 'Shelve6::Store::' ~ $store-cfg<type>;
-require ::($store-type); # XXX catch excpetion from this
-my $store = ::($store-type).new();
-$store.configure($store-cfg);
+my $store = Shelve6::Store.new();
+$store.configure($config.get<store>);
 
 $store.start;
 $log.debug("Starting components...");

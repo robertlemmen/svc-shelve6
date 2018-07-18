@@ -1,9 +1,38 @@
-use Shelve6::Component;
+use Cro::HTTP::Response;
 
-unit role Shelve6::Repository does Shelve6::Component;
+use Shelve6::Server;
+use Shelve6::Store;
 
-method register-server($server) { ... }
+unit class Shelve6::Repository;
 
-method register-store($store) { ... }
+has Str $!name;
+has Shelve6::Server $!server;
+has Shelve6::Store $!store;
 
-method handle-repo-rq($request, $path-segments-handled) { ... }
+method configure(%options) {
+    # XXX validate and more options
+    $!name = %options<name>;
+}
+
+method register-server($server) {
+    $!server = $server;
+    $!server.register-repo($!name, self);
+}
+
+method register-store($store) {
+    $!store = $store;
+}
+
+method start() {
+}
+
+method stop() {
+}
+
+method get-package-list() {
+    return %(test => [123, 456]);
+}
+
+method get-file($path) {
+    return $path;
+}

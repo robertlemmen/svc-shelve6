@@ -1,6 +1,7 @@
 {
     "perl" : "6.*",
     "name" : "Shelve6",
+    "version" : "0.0.1",
     "description" : "Artifact repository for Perl 6 and friends",
     "authors" : [
         "Robert Lemmen"
@@ -10,6 +11,9 @@
         "Config::Parser::json",
         "Cro",
         "JSON::Fast"
+    ],
+    "test-depends" : [
+        "Test::META"
     ],
     "provides" : {
     },
