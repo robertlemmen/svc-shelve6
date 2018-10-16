@@ -1,14 +1,74 @@
 #!/bin/bash
 
+# this script is a simple upload helper for shelve6 that makes it easy to submit
+# artifacts. it is written in bash to allow usage in systems that do not have
+# perl 6 installed, like a continuous integration job, and because. 
+# Note that this is just a very thin wrapper around curl, you can submit with
+# any tool that supports HTTP posts with headers and multi-part form data  
+
 set -e
 
-which curl2 > /dev/null || {
+which curl > /dev/null || {
     echo "$0 is a thin wrapper around 'curl' which does not appear to be"
     echo "available. Please install it and try again.";
     exit 1;
 }
 
-# XXX parse cmdline options
-# XXX check file exists
-# XXX upload
-# curl -v -H "Expect:" -F 'img_avatar=@PLAN.md' http://localhost:8080/repos/p6repo
+function usage() {
+    echo "Usage: $0 <artifact> <repository-url> [options]"
+    echo 
+    echo "Where <artifact> is a file, for example a tarball with a perl 6 source"
+    echo "distribution. What artifacts are accepted and what constraints need to"
+    echo "be met depend on the target repository and the configuration."
+    echo 
+    echo "<repository-url> is a full URL including protocol and repository path"
+    echo "of a shelve6 repository server, e.g. "
+    echo "http://perl6repo.mycorp.com/repos/prod-releases"
+    echo
+    echo "[options] can be any of:"
+    echo "    --help -h         display this message and exit"
+}
+
+ARG_HELP=false
+ARG_VERBOSE=false
+
+OPTS=$(getopt --options "hv" --long "help,verbose" --name "$0" -- "$@")
+eval set -- "$OPTS"
+
+while true ; do
+    case "$1" in
+        -h | --help ) ARG_HELP=true; shift ;;
+        -v | --verbose ) ARG_VERBOSE=true; shift ;;
+        -- ) shift; break ;;
+    esac
+done
+
+if [ "$ARG_HELP" = true ]; then
+    usage
+    exit 0
+fi
+
+if [ "$#" -ne 2 ]; then
+    echo "Illegal number of required parameters, need two"
+    exit 1
+fi
+
+ARTIFACT=$1
+REPOURL=$2
+
+if [ ! -f $ARTIFACT ]; then
+    echo "Artifact file '$ARTIFACT' does not exist or is not a file"
+    exit 2
+fi
+
+CURL_ARG_VERBOSE="-q"
+if [ "$ARG_VERBOSE" = true ]; then
+    CURL_ARG_VERBOSE="-v"
+fi
+COMMAND="curl $CURL_ARG_VERBOSE -H Expect: -F artifact=@$ARTIFACT $REPOURL"
+
+if [ "$ARG_VERBOSE" = true ]; then
+    echo $COMMAND
+fi
+echo "uploading $ARTIFACT to $REPOURL...."
+exec $COMMAND

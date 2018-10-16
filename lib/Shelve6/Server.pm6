@@ -50,8 +50,12 @@ method start() {
         post -> 'repos', $repo-name {
             if %!repositories{$repo-name}:exists {
                 request-body -> $object {
-                    # XXX make sure it is a Cro::HTTP::Body::MultiPartFormData
-                    # with one entry
+                    #  make sure it is a Cro::HTTP::Body::MultiPartFormData
+                    # with one entry named "artifact"
+                    say $object.WHAT;
+                    if ! $object ~~ Int.WHAT {
+                        die "not multi-part form data";
+                    }
                     say $object.WHAT;
                     for $object.parts -> $part {
                         say "- {$part.name} {$part.filename} {$part.body-blob.elems}";
