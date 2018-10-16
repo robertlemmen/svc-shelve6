@@ -6,11 +6,15 @@ use Cro::HTTP::ResponseSerializer;
 use Cro::HTTP::Router;
 use Cro::TCP;
 
+use Shelve6::Logging;
+
 unit class Shelve6::Server;
 
 has $!port;
 has $!http-service;
 has %!repositories;
+
+my $log = Shelve6::Logging.new('server');
 
 method configure(%options) {
     # XXX validate and more options
@@ -48,14 +52,17 @@ method start() {
                 request-body -> $object {
                     # XXX make sure it is a Cro::HTTP::Body::MultiPartFormData
                     # with one entry
-                    say $object.parts.elems;
+                    say $object.WHAT;
+                    for $object.parts -> $part {
+                        say "- {$part.name} {$part.filename} {$part.body-blob.elems}";
+                    }
                     # XXX get file into tmpdir and call repo to handle it
                 }
             }
             else {
                 not-found;
             }
-        }        
+        }
     };
 
     $!http-service = Cro.compose(
@@ -66,7 +73,8 @@ method start() {
         Cro::HTTP::ResponseSerializer.new
     );
     $!http-service.start;
-    say %!repositories.perl;
+
+    $log.debug("HTTP server listening on port $!port");
 }
 
 method stop() {

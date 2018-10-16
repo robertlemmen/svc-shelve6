@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -e
+
+which curl2 > /dev/null || {
+    echo "$0 is a thin wrapper around 'curl' which does not appear to be"
+    echo "available. Please install it and try again.";
+    exit 1;
+}
+
+# XXX parse cmdline options
+# XXX check file exists
+# XXX upload
+# curl -v -H "Expect:" -F 'img_avatar=@PLAN.md' http://localhost:8080/repos/p6repo

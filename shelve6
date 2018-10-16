@@ -34,8 +34,8 @@ my $store-cfg = $config.get<store>;
 my $store = Shelve6::Store.new();
 $store.configure($config.get<store>);
 
-$store.start;
 $log.debug("Starting components...");
+$store.start;
 for @repositories -> $repo {
     $repo.register-server($server);
     $repo.register-store($store);
@@ -43,7 +43,8 @@ for @repositories -> $repo {
 }
 $server.start;
 
-$log.debug("Application initialization complete!");
+$log.info("Application initialization complete!");
+
 signal(SIGINT).tap: {
     $log.debug("Shutting down components...");
     $server.stop;
