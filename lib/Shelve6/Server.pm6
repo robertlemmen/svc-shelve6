@@ -27,9 +27,12 @@ method register-repo($name, $repo) {
 
 method start() {
     my $router = route {
+        get -> 'repos', $repo-name {
+            redirect "/repos/$repo-name/packages.json";
+        }
         get -> 'repos', $repo-name, 'packages.json' {
             if %!repositories{$repo-name}:exists {
-                content 'application/json', %!repositories{$repo-name}.get-package-list();
+                content 'application/json', to-json %!repositories{$repo-name}.get-package-list();
             }
             else {
                 # fancy body
@@ -52,15 +55,18 @@ method start() {
                 request-body -> $object {
                     #  make sure it is a Cro::HTTP::Body::MultiPartFormData
                     # with one entry named "artifact"
-                    say $object.WHAT;
-                    if ! $object ~~ Int.WHAT {
+                    if ! $object ~~ Cro::HTTP::BodyParser::MultiPartFormData.WHAT {
                         die "not multi-part form data";
                     }
-                    say $object.WHAT;
                     for $object.parts -> $part {
-                        say "- {$part.name} {$part.filename} {$part.body-blob.elems}";
+                        if $part.name eq 'artifact' {
+                            $log.debug("upload of artifact '{$part.filename}', {$part.body-blob.elems} octets");
+                            %!repositories{$repo-name}.put($part.filename, $part.body-blob);
+                        }
+                        else {
+                            # warn, ignore
+                        }
                     }
-                    # XXX get file into tmpdir and call repo to handle it
                 }
             }
             else {

@@ -1,6 +1,6 @@
 server:
     port: 8080
 store:
-    basedir: /home/robertle/work/shelve6/store
+    basedir: store
 repositories:
     - name: p6repo
