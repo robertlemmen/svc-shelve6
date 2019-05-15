@@ -49,7 +49,7 @@ if [ "$ARG_HELP" = true ]; then
 fi
 
 if [ "$#" -ne 2 ]; then
-    echo "Illegal number of required parameters, need two"
+    echo "Illegal number of required parameters, need two (--help says what they are)"
     exit 1
 fi
 
