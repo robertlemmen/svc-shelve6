@@ -5,12 +5,14 @@ use Cro::HTTP::Response;
 use Cro::HTTP::ResponseSerializer;
 use Cro::HTTP::Router;
 use Cro::TCP;
+use JSON::Fast;
 
 use Shelve6::Logging;
 
 unit class Shelve6::Server;
 
 has $!port;
+has $.base-url;
 has $!http-service;
 has %!repositories;
 
@@ -19,6 +21,7 @@ my $log = Shelve6::Logging.new('server');
 method configure(%options) {
     # XXX validate and more options
     $!port = %options<port>;
+    $!base-url = %options<base-url>;
 }
 
 method register-repo($name, $repo) {
@@ -32,7 +35,7 @@ method start() {
         }
         get -> 'repos', $repo-name, 'packages.json' {
             if %!repositories{$repo-name}:exists {
-                content 'application/json', to-json %!repositories{$repo-name}.get-package-list();
+                content 'application/json', to-json(%!repositories{$repo-name}.get-package-list(), :sorted-keys);
             }
             else {
                 # fancy body
