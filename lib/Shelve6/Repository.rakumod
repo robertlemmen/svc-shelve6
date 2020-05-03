@@ -63,6 +63,7 @@ method put($filename, $blob) {
 }
 
 method get-package-list() {
+    # XXX cache the list separately?
     my $packages = $!store.list-artifacts($!name);
     my @result-list;
     for $packages -> $p {
@@ -77,6 +78,7 @@ method get-package-list() {
 }
 
 method get-file($path) {
-    # XXX check that artifact exists, return undef otehrwise
+    # XXX check that artifact exists, return undef otehrwise. this currently has
+    # weird security problems
     return $path;
 }
