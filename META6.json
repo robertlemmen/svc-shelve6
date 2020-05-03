@@ -1,10 +1,10 @@
 {
-    "perl" : "6.*",
+    "perl" : "6.c",
     "name" : "Shelve6",
     "version" : "0.0.1",
     "description" : "Artifact repository for Perl 6 and friends",
     "authors" : [
-        "Robert Lemmen"
+        "Robert Lemmen <robertle@semistable.com>"
     ],
     "depends" : [
         "Config",
@@ -18,5 +18,5 @@
     "provides" : {
     },
     "license" : "Artistic-2.0",
-    "source-url" : "https://github.com/robertlemmen/shelve6.git"
+    "source-url" : "git://github.com/robertlemmen/svc-shelve6.git"
 }
