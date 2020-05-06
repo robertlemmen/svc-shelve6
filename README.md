@@ -28,7 +28,7 @@ Essentially this is a "content storage" service as described in [S22][1]
   or a fetch-ahead full copy. Perhaps both, configurably.
 - Rarification/expiry of artifacts in configured repositories
 
-## Ideas
+## Random Ideas
 
 - web service
 - /ui/ /api/ and /repos
@@ -65,16 +65,19 @@ Essentially this is a "content storage" service as described in [S22][1]
 
 ## ToDo
 
-* move executable to bin/. but what of the upload script, that is shell, should
-  it really be there? contrib? etc? rename to .sh? have a raku version of it as
-  well?
-* rewrite PLAN to README and document what the new idea is
-* rename repo to svc-content-storage and other stuff to match. really?
-  content-storage is a really shitty name... and ehleve6 could be *a*
-  implementation of such a service... so perhaps svc-shelve6
 * simplify current code to get basic, unauthorized upload/download to work
   cleanly
 * upload auth with bearer tokens
 * patch zef to auth downloads with bearer token
+
+Also grep for the `XXX` fixmes in the code!
+
+## License
+
+Shelve6 is licensed under the [Artistic License 2.0](https://opensource.org/licenses/Artistic-2.0). Note that the currently used Config module is GPL.
+
+## Feedback and Contact
+
+Please let me know what you think: Robert Lemmen <robertle@semistable.com>
 
 [1]: https://design.raku.org/S22.html#content_storage
