@@ -85,7 +85,7 @@ fi
 if [ $HTTPCODE -ne 200 ]; then
     echo "Upload failed with http code $HTTPCODE"
     if [ -n "$BODY" ]; then
-        echo "HTTP Body: $BODY"
+        echo "$BODY"
     fi
     exit 1
 fi

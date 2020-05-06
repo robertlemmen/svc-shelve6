@@ -1,4 +1,5 @@
 use Shelve6::Logging;
+use X::Shelve6::ClientError;
 
 unit class Shelve6::Store;
 
@@ -12,15 +13,22 @@ method configure(%options) {
 }
 
 method start() {
-    $log.debug("Setting up store with file backend at $!basedir");
+    $log.debug("Setting up store with file backend at '$!basedir'");
 }
 
 method stop() {
 }
 
 method put($path, $filename, $blob, $meta) {
-    # XXX create path as required
-    # XXX fail if already exists
+    if IO::Path.new("$!basedir/$path/artifacts/$filename").e {
+        my $msg = "Attempt to replace artifact '$filename' in '$path', refusing";
+        $log.warn($msg);
+        die X::Shelve6::ClientError.new(code => 403, message => $msg);
+    }
+    # create path as required
+    IO::Path.new("$!basedir/$path/artifacts/").mkdir;
+    IO::Path.new("$!basedir/$path/meta/").mkdir;
+    # XXX do the writing in tempdir and move atomically
     my $fh = open("$!basedir/$path/artifacts/$filename", :w);
     $fh.write($blob);
     $fh.close;
@@ -31,9 +39,12 @@ method put($path, $filename, $blob, $meta) {
 }
 
 method list-artifacts($path) {
-    my @results =  IO::Path.new("$!basedir/$path/artifacts").dir;
-    $log.debug("  got artifacts {@results.perl}");
+    my @results = IO::Path.new("$!basedir/$path/artifacts").dir;
     return @results.map(-> $i { $i.relative("$!basedir/$path/artifacts")});
+}
+
+method artifact-exists($path, $filename) {  
+    return IO::Path.new("$!basedir/$path/artifacts/$filename").e;
 }
 
 method get-meta($path, $name) {

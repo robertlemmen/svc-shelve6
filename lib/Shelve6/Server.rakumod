@@ -8,6 +8,7 @@ use Cro::TCP;
 use JSON::Fast;
 
 use Shelve6::Logging;
+use X::Shelve6::ClientError;
 
 unit class Shelve6::Server;
 
@@ -38,18 +39,21 @@ method start() {
                 content 'application/json', to-json(%!repositories{$repo-name}.get-package-list(), :sorted-keys);
             }
             else {
-                # fancy body
                 not-found;
             }
         }
         get -> 'repos', $repo-name, *@path {
             if %!repositories{$repo-name}:exists {
                 my $path = %!repositories{$repo-name}.get-file(@path.join('/'));
-                # XXX configurably serve through nginx directly
-                static $path;
+                if defined $path {
+                    # XXX configurably serve through nginx directly
+                    static $path;
+                }
+                else {
+                    not-found;
+                }
             }
             else {
-                # fancy body
                 not-found;
             }
         }
@@ -59,7 +63,8 @@ method start() {
                     #  make sure it is a Cro::HTTP::Body::MultiPartFormData
                     # with one entry named "artifact"
                     if ! $object ~~ Cro::HTTP::BodyParser::MultiPartFormData.WHAT {
-                        die "not multi-part form data";
+                        forbidden;
+                        content("text/plain", "artifact upload must be a MultiPartFormData");
                     }
                     for $object.parts -> $part {
                         if $part.name eq 'artifact' {
@@ -67,10 +72,23 @@ method start() {
                             %!repositories{$repo-name}.put($part.filename, $part.body-blob);
                         }
                         else {
-                            # warn, ignore
+                            forbidden;
+                            content("text/plain", "part name of upload must be 'artifact'");
                         }
                     }
                 }
+                CATCH {
+                    when X::Shelve6::ClientError {
+                        response.status = .code;
+                        content("text/plain", .message);
+                    }
+                    default {
+                        $log.warn("Unhandled exception: " ~ .message);
+                        $log.warn(.backtrace);
+                        response.status = 500;
+                        content("text/plain", .message);
+                    }
+                }                    
             }
             else {
                 not-found;
@@ -79,7 +97,9 @@ method start() {
     };
 
     $!http-service = Cro.compose(
-        # XXX this weird ipv6 binding thing..
+        # XXX this weird ipv6 binding thing! perhaps it needs 
+        # configuration? what heppens if I bind to ::1 on a machine that 
+        # has no IPv6? can I have multiple listeners?
         Cro::TCP::Listener.new(host => '0.0.0.0', port => $!port),
         Cro::HTTP::RequestParser.new,
         $router,
