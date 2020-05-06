@@ -27,6 +27,7 @@ function usage() {
     echo
     echo "[options] can be any of:"
     echo "    --help -h         display this message and exit"
+    echo "    --verbose -v      show more output, for debugging"
 }
 
 ARG_HELP=false
@@ -65,10 +66,26 @@ CURL_ARG_VERBOSE="-q"
 if [ "$ARG_VERBOSE" = true ]; then
     CURL_ARG_VERBOSE="-v"
 fi
-COMMAND="curl $CURL_ARG_VERBOSE -H Expect: -F artifact=@$ARTIFACT $REPOURL"
+TFILE=`mktemp`
+COMMAND="curl -s -o $TFILE -w "%{http_code}" $CURL_ARG_VERBOSE -H Expect: -F artifact=@$ARTIFACT $REPOURL"
 
 if [ "$ARG_VERBOSE" = true ]; then
     echo $COMMAND
 fi
 echo "uploading $ARTIFACT to $REPOURL...."
-exec $COMMAND
+set +e
+HTTPCODE=`$COMMAND`
+EXITCODE=$?
+BODY=$(cat $TFILE; rm -f $TFILE)
+
+if [ $EXITCODE -ne 0 ]; then
+    echo "Upload failed with exit code $EXITCODE"
+    exit $EXITCODE
+fi
+if [ $HTTPCODE -ne 200 ]; then
+    echo "Upload failed with http code $HTTPCODE"
+    if [ -n "$BODY" ]; then
+        echo "HTTP Body: $BODY"
+    fi
+    exit 1
+fi
