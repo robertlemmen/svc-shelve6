@@ -65,12 +65,60 @@ Essentially this is a "content storage" service as described in [S22][1]
 
 ## ToDo
 
-* simplify current code to get basic, unauthorized upload/download to work
-  cleanly
 * upload auth with bearer tokens
 * patch zef to auth downloads with bearer token
 
 Also grep for the `XXX` fixmes in the code!
+
+## Usage
+
+Shelve6 comes as a web service that you can just start e.g. directly from
+the checked-out source repository via `RAKUDOLIB=lib bin/shelve6`, or if it is 
+properly installed just via `shelve6`. It reads a config.yaml file, a simple
+sample is included, and might look like this:
+```
+    server:
+        port: 8080
+        base-url: "http://localhost:8080"
+    store:
+        basedir: store
+    repositories:
+        - name: p6repo
+```
+* `base-url` is where you want the service to be found externally
+* `port` is of course the port the service listens on, note that  it currently
+  only binds to the '0.0.0.0' interface, let me know if that gives you grief.
+* `basedir` is a directory where shleve6 will store the artifacts
+* and the repositories is a list of logical artifact repositories in which you
+  can store modules
+
+With the service running, you can use the supplied shelve6-upload script to put
+artifacts into shelve6:
+```
+    bin/shelve6-upload raku-foo-bar-0.1.tar.gz http://localhost:8080/repos/p6repo
+
+```
+This script is just a thin wrapper around curl, you just need a multipart form
+post really.
+
+In order to fetch artifacts, you need to configure your zef to recognise the
+repository. In my case I have a `~/.config/zef/config.json`, where in the
+`Repository` section I added:
+```
+    {
+        "short-name" : "shelve6",
+        "enabled" : 1,
+        "module" : "Zef::Repository::Ecosystems",
+        "options" : {
+            "name" : "shelve6",
+            "auto-update" : 1,
+            "mirrors" : [
+                "http://localhost:8080/repos/p6repo/packages.json"
+            ]
+        }
+    },
+```
+After that, zef happily pulls from shelve6!
 
 ## License
 
