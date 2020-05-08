@@ -31,7 +31,7 @@ method register-store($store) {
 }
 
 method start() {
-    $log.debug("Setting up repository '$!name'");
+    $log.debug("Setting up repository '$!name', reachable under '$!base-url/repos/$!name'");
 }
 
 method stop() {

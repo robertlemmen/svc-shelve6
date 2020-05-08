@@ -62,6 +62,8 @@ Essentially this is a "content storage" service as described in [S22][1]
 - zef would need local changes in ~/.config/zeff/config.json so that it knows
   about the store url, and it would need patches to support authentication
 - full-blown monitoring, resilience etc 
+- more metadata, like when uploaded and by whom. "on-behalf" in upload script 
+  so that a CI or automation job can say on whose command they uploaded
 
 ## ToDo
 
@@ -87,7 +89,7 @@ sample is included, and might look like this:
 ```
 * `base-url` is where you want the service to be found externally
 * `port` is of course the port the service listens on, note that  it currently
-  only binds to the '0.0.0.0' interface, let me know if that gives you grief.
+  only binds to the first localhost interface, let me know if that gives you grief.
 * `basedir` is a directory where shleve6 will store the artifacts
 * and the repositories is a list of logical artifact repositories in which you
   can store modules
