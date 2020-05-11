@@ -9,6 +9,7 @@ use X::Shelve6::ClientError;
 unit class Shelve6::Repository;
 
 has Str $!name;
+has $!authorization;
 has Str $!base-url;
 has Shelve6::Server $!server;
 has Shelve6::Store $!store;
@@ -18,6 +19,7 @@ my $log = Shelve6::Logging.new('repo');
 method configure(%options) {
     # XXX validate and more options
     $!name = %options<name>;
+    $!authorization = %options<authorization>;
 }
 
 method register-server($server) {
@@ -32,12 +34,37 @@ method register-store($store) {
 
 method start() {
     $log.debug("Setting up repository '$!name', reachable under '$!base-url/repos/$!name'");
+    for ('upload', 'download') -> $perm {
+        my $roles = $!authorization{$perm} // ();
+        if not $roles {
+            $log.warn("No roles are required to '$perm' to $!name, this feels unsafe");
+        }
+    }
 }
 
 method stop() {
 }
 
-method put($filename, $blob) {
+method !require-permission($perm, $auth-info) {
+    my $sufficient-roles = set @($!authorization{$perm}) // ();
+    my $present-roles = set ();
+    my $owner-name = "unknown client";
+    if $auth-info {
+        $present-roles = set $auth-info.roles;
+        $owner-name = $auth-info.owner;
+    }
+
+    if $sufficient-roles {
+        if not $sufficient-roles (&) $present-roles {
+            $log.debug("Denying $perm access on repo $!name to $owner-name");
+            die X::Shelve6::ClientError.new(code => 403,
+                message => "Denying $perm access, not authorized");
+        }
+    }
+}
+
+method put-file($filename, $blob, $auth-info) {
+    self!require-permission("upload", $auth-info);
     # a bit primitive, but there you go for now
     my $proc = run(<tar --list -z -f - >, :out, :in);
     $proc.in.write($blob);
@@ -53,6 +80,7 @@ method put($filename, $blob) {
     if ! defined $meta-membername {
         my $msg = "Artifact '$filename' seems to not contain a META6.json or .info, refusing";
         $log.warn($msg);
+        # XXX is 403 the right code?
         die X::Shelve6::ClientError.new(code => 403, message => $msg);
     }
     
@@ -67,12 +95,14 @@ method put($filename, $blob) {
     if $! {
         my $msg = "Artifact '$filename' has malformed metadata, refusing";
         $log.warn($msg);
+        # XXX is 403 the right code?
         die X::Shelve6::ClientError.new(code => 403, message => $msg);
     }
     $!store.put($!name, $filename, $blob, $meta-json);
 }
 
-method get-package-list() {
+method get-package-list($auth-info) {
+    self!require-permission("download", $auth-info);
     # XXX cache the list?
     my $packages = $!store.list-artifacts($!name);
     my @result-list;
@@ -86,7 +116,8 @@ method get-package-list() {
     return @result-list;
 }
 
-method get-file($fname) {
+method get-file($fname, $auth-info) {
+    self!require-permission("download", $auth-info);
     if $!store.artifact-exists($!name, $fname) {
         $log.debug("fetch of artifact '$fname' from repo '$!name'");
         return $fname;

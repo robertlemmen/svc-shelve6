@@ -3,6 +3,8 @@ use Cro::HTTP::Server;
 use JSON::Fast;
 
 use Shelve6::Logging;
+use Shelve6::AuthInfo;
+
 use X::Shelve6::ClientError;
 
 unit class Shelve6::Server;
@@ -16,10 +18,20 @@ has $!auth-config;
 my $log = Shelve6::Logging.new('server');
 
 my class AuthTokenToRolesResolver does Cro::HTTP::Middleware::Request {
+    has $.auth-config;
     method process(Supply $requests --> Supply) {
         supply whenever $requests -> $request {
-#            note "Looking at request auth header {$request.header('Authorization')//''}";
-#            $request.auth = "ofenrohre!";
+            my $auth-header = $request.header('Authorization')//'';
+            if $auth-header ~~ /^ 'Bearer ' $<token>=[\w+] $/ {
+                for @($!auth-config<opaque-tokens>) -> $token-config {
+                    if $token-config<token> eq $<token> {
+                        $request.auth = Shelve6::AuthInfo.new(
+                            owner => $token-config<owner>,
+                            roles => @($token-config<roles>));
+                        last;
+                    }
+                }
+            }
             emit $request;
         }
     }
@@ -29,9 +41,7 @@ method configure(%options) {
     # XXX validate and more options
     $!port = %options<port>;
     $!base-url = %options<base-url>;
-#    $!auth-config = %options<authentication>;
-#    # XXX roles should be comma-split, but we should also accept arrays
-#    note "### {$!auth-config.gist}";
+    $!auth-config = %options<authentication>;
 }
 
 method register-repo($name, $repo) {
@@ -58,7 +68,7 @@ sub with-api-exceptions(&route-handler) {
 
 method start() {
     my $repo-routes = route {
-        before-matched AuthTokenToRolesResolver.new;
+        before-matched AuthTokenToRolesResolver.new(:$!auth-config);
 
         get -> $repo-name {
             redirect "/repos/$repo-name/packages.json";
@@ -67,7 +77,7 @@ method start() {
             with-api-exceptions({
                 if %!repositories{$repo-name}:exists {
                     content 'application/json', to-json(
-                        %!repositories{$repo-name}.get-package-list(),
+                        %!repositories{$repo-name}.get-package-list(request.auth),
                         :sorted-keys);
                 }
                 else {
@@ -78,7 +88,9 @@ method start() {
         get -> $repo-name, *@path {
             with-api-exceptions({
                 if %!repositories{$repo-name}:exists {
-                    my $path = %!repositories{$repo-name}.get-file(@path.join('/'));
+                    my $path = %!repositories{$repo-name}.get-file(
+                                    @path.join('/'),
+                                    request.auth);
                     if defined $path {
                         # XXX configurably serve through nginx directly
                         static $path;
@@ -105,7 +117,10 @@ method start() {
                         for $object.parts -> $part {
                             if $part.name eq 'artifact' {
                                 $log.debug("upload of artifact '{$part.filename}', {$part.body-blob.elems} octets");
-                                %!repositories{$repo-name}.put($part.filename, $part.body-blob);
+                                %!repositories{$repo-name}.put-file(
+                                        $part.filename,
+                                        $part.body-blob,
+                                        request.auth);
                             }
                             else {
                                 forbidden;

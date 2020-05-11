@@ -19,27 +19,34 @@ function usage() {
     echo 
     echo "Where <artifact> is a file, for example a tarball with a perl 6 source"
     echo "distribution. What artifacts are accepted and what constraints need to"
-    echo "be met depend on the target repository and the configuration."
+    echo "be met depends on the target repository and the configuration."
     echo 
     echo "<repository-url> is a full URL including protocol and repository path"
     echo "of a shelve6 repository server, e.g. "
     echo "http://perl6repo.mycorp.com/repos/prod-releases"
     echo
     echo "[options] can be any of:"
-    echo "    --help -h         display this message and exit"
-    echo "    --verbose -v      show more output, for debugging"
+    echo "    --opaque-token <token> set authentication token"
+    echo "    --help -h              display this message and exit"
+    echo "    --verbose -v           show more output, for debugging"
+    echo
+    echo "Environment Variables:"
+    echo "    SHELVE6_OPAQUE_TOKEN   as an alternative way to set --opaque-token"
+    echo "                           (the cmdline option overrides the env var)"
 }
 
 ARG_HELP=false
 ARG_VERBOSE=false
+ARG_OPAQUE_TOKEN=$SHELVE6_OPAQUE_TOKEN
 
-OPTS=$(getopt --options "hv" --long "help,verbose" --name "$0" -- "$@")
+OPTS=$(getopt --options "hv" --long "help,verbose,opaque-token:" --name "$0" -- "$@")
 eval set -- "$OPTS"
 
 while true ; do
     case "$1" in
         -h | --help ) ARG_HELP=true; shift ;;
         -v | --verbose ) ARG_VERBOSE=true; shift ;;
+        --opaque-token ) shift; ARG_OPAQUE_TOKEN=$1; shift ;;
         -- ) shift; break ;;
     esac
 done
@@ -50,7 +57,9 @@ if [ "$ARG_HELP" = true ]; then
 fi
 
 if [ "$#" -ne 2 ]; then
-    echo "Illegal number of required parameters, need two (--help says what they are)"
+    echo "Illegal number of required parameters, need two"
+    echo
+    usage
     exit 1
 fi
 
@@ -59,6 +68,8 @@ REPOURL=$2
 
 if [ ! -f $ARTIFACT ]; then
     echo "Artifact file '$ARTIFACT' does not exist or is not a file"
+    echo
+    usage
     exit 2
 fi
 
@@ -66,8 +77,12 @@ CURL_ARG_VERBOSE="-q"
 if [ "$ARG_VERBOSE" = true ]; then
     CURL_ARG_VERBOSE="-v"
 fi
+CURL_ARG_AUTH=
+if [ -n "$ARG_OPAQUE_TOKEN" ]; then
+    CURL_ARG_AUTH="--oauth2-bearer $ARG_OPAQUE_TOKEN"
+fi
 TFILE=`mktemp`
-COMMAND="curl -s -o $TFILE -w "%{http_code}" $CURL_ARG_VERBOSE -H Expect: -F artifact=@$ARTIFACT $REPOURL"
+COMMAND="curl -s -o $TFILE -w "%{http_code}" $CURL_ARG_AUTH $CURL_ARG_VERBOSE -H Expect: -F artifact=@$ARTIFACT $REPOURL"
 
 if [ "$ARG_VERBOSE" = true ]; then
     echo $COMMAND

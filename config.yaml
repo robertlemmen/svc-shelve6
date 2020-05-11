@@ -1,7 +1,19 @@
 server:
     port: 8080
     base-url: "http://localhost:8080"
+    authentication:
+        opaque-tokens:
+            - token: supersecret
+              roles: [CI]
+              owner: raku-ci-1
+            - token: eng8ahquia2kungeitaequie
+              roles: [DEV, ADMIN]
+              owner: Robert Lemmen <robertle@semistable.com>
 store:
     basedir: store
 repositories:
     - name: p6repo
+      authorization:
+        upload: [CI, DEV, ADMIN]
+        download: [CI, DEV, ADMIN]
+        delete: [ADMIN]
