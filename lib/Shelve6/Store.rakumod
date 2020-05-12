@@ -23,13 +23,18 @@ method put($path, $filename, $blob, $meta) {
     # create path as required
     IO::Path.new("$!basedir/$path/artifacts/").mkdir;
     IO::Path.new("$!basedir/$path/meta/").mkdir;
-    # XXX do the writing in tempdir and move atomically
-    my $fh = open("$!basedir/$path/artifacts/$filename", :w);
+    IO::Path.new("$!basedir/$path/temp/").mkdir;
+
+    my $fh = open("$!basedir/$path/temp/$filename", :w);
     $fh.write($blob);
     $fh.close;
-    $fh = open("$!basedir/$path/meta/$filename.meta", :w);
+    "$!basedir/$path/temp/$filename".IO.rename("$!basedir/$path/artifacts/$filename");
+
+    $fh = open("$!basedir/$path/temp/$filename.meta", :w);
     $fh.put($meta);
     $fh.close;
+    "$!basedir/$path/temp/$filename.meta".IO.rename("$!basedir/$path/meta/$filename.meta");
+
     $log.debug("Stored artifact $filename in $path");
 }
 
