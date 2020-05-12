@@ -11,6 +11,31 @@ yet want to use a regular module-centric, tarball/release-based development flow
 
 Essentially this is a "content storage" service as described in [S22][1]
 
+## Features
+
+- Upload Raku modules
+- Fetch with zef
+- Authentication
+- Multiple configurable logical repos
+
+## Upcoming and ToDo
+
+- cucumis sextus tests
+- UI to browse and manage
+- API to manage and automate
+- Local cache/proxy for other repositories, like CPAN. Could be just a cache,
+  or a fetch-ahead full copy. Perhaps both, configurably.
+- Rarification/expiry of artifacts in configured repositories
+- Web hooks for automation
+- Verification and other plugins
+- Shared file store, multiple shelve6 instances. Or a database as a store.
+- More auth types
+- Full-blown monitoring, resilience etc 
+- More metadata, like when uploaded and by whom. "on-behalf" in upload script 
+  so that a CI or automation job can say on whose command they uploaded
+
+Also grep for the `XXX` fixmes in the code!
+
 ## Usage
 
 Shelve6 comes as a web service that you can just start e.g. directly from
@@ -132,70 +157,9 @@ This will make zef use the configured credential for the host in question. If
 you do not want to put the credential into the config file, you can also leave
 it out and supply it via the ZEF_AUTH_OPAQUE_TOKEN environment variable.
 
-## Basic requirements
-
-- push a module tarball
-- extract META6.json, augment with correct/new source-url and combine into 
-  distribution list
-- download and install via zef
-- authentication for upload/download
-
-## Further requirements and nice-to-have
-
-- multiple configurable logical repos
-- UI to browse and manage
-- API to manage and automate
-- Local cache/proxy for other repositories, like CPAN. Could be just a cache,
-  or a fetch-ahead full copy. Perhaps both, configurably.
-- Rarification/expiry of artifacts in configured repositories
-
-## Random Ideas
-
-- web service
-- /ui/ /api/ and /repos
-- /repos/<reponame> to support multiple logical repos
-- post to the repo to submit a tarball, possibly as form-encoded
-- get list from repo in cpan format /repos/<reponame>/packages.json
-- entries in there are enriched meta files from tarball
-- submission means a few steps to extract/verify, we can then later have plugins
-  that do whatever people want in terms of checking/gating/analysis.
-- flat-file structure without db, startup of service collects info. Later we
-  could have a more complicated persistence
-- e.g.: multiple instances on same backend filesystem by writing update log
-  files each
-- pluggable authentication, could be different mechanism for people and CI jobs 
-- put all files in common root, so that at least the tarballs can be delivered 
-  directly with reverse proxy
-- perl6 repos can either be local ones, or proxy ones where a cronjob fetches the
-  remote/backing updates and stores them locally. from the client side these
-  look the same. could have a "cached" type as well which does only store
-  artifacts locally if they ever get accessed
-- some sort of subscribale event/webhook when modules get uploaded to allow
-  other automation to run
-- tls and direct access to static files through nginx or similar
-- X-accel to serve from nginx, with authentication. not really needed but I
-  would like to try that anyway
-- local store with artifacts, state and config in flat files, so they can be
-  shared and rsynced. needs write to temp and move for atomicity
-- nice logging and statistics keeping
-- configurable expiry of old versions in some cases (e.g. for snapshot builds
-  from CI)
-- zef would need local changes in ~/.config/zeff/config.json so that it knows
-  about the store url, and it would need patches to support authentication
-- full-blown monitoring, resilience etc 
-- more metadata, like when uploaded and by whom. "on-behalf" in upload script 
-  so that a CI or automation job can say on whose command they uploaded
-
-## ToDo
-
-* upload auth with bearer tokens
-* patch zef to auth downloads with bearer token
-
-Also grep for the `XXX` fixmes in the code!
-
 ## License
 
-Shelve6 is licensed under the [Artistic License 2.0](https://opensource.org/licenses/Artistic-2.0). Note that the currently used Config module is GPL.
+Shelve6 is licensed under the [Artistic License 2.0](https://opensource.org/licenses/Artistic-2.0). 
 
 ## Feedback and Contact
 

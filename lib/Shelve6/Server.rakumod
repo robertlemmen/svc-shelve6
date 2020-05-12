@@ -109,11 +109,11 @@ method start() {
                         }
                         for $object.parts -> $part {
                             if $part.name eq 'artifact' {
-                                $log.debug("upload of artifact '{$part.filename}', {$part.body-blob.elems} octets");
                                 %!repositories{$repo-name}.put-file(
                                         $part.filename,
                                         $part.body-blob,
                                         request.auth);
+                                $log.info("upload of artifact '{$part.filename}' to $repo-name, {$part.body-blob.elems} octets");
                             }
                             else {
                                 forbidden;
