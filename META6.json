@@ -7,10 +7,9 @@
         "Robert Lemmen <robertle@semistable.com>"
     ],
     "depends": [
-        "Config",
-        "Config::Parser::json",
         "Cro",
-        "JSON::Fast"
+        "JSON::Fast",
+        "YAMLish"
     ],
     "test-depends": [
         "Test::META"

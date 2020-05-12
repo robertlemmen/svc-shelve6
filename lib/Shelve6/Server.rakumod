@@ -9,11 +9,11 @@ use X::Shelve6::ClientError;
 
 unit class Shelve6::Server;
 
-has $!port;
+has $.port;
 has $.base-url;
+has $.auth-config;
 has $!http-service;
 has %!repositories;
-has $!auth-config;
 
 my $log = Shelve6::Logging.new('server');
 
@@ -35,13 +35,6 @@ my class AuthTokenToRolesResolver does Cro::HTTP::Middleware::Request {
             emit $request;
         }
     }
-}
-
-method configure(%options) {
-    # XXX validate and more options
-    $!port = %options<port>;
-    $!base-url = %options<base-url>;
-    $!auth-config = %options<authentication>;
 }
 
 method register-repo($name, $repo) {

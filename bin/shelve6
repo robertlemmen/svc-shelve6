@@ -1,57 +1,43 @@
 #!/usr/bin/env raku
 
-use Config;
-
 use Shelve6::Logging;
+use Shelve6::Config;
 use Shelve6::Server;
 use Shelve6::Store;
 use Shelve6::Repository;
 
-my $config-file = 'config.yaml';
-
 my $log = Shelve6::Logging.new('main');
-my $config = Config.new();
 
-my @repositories;
+sub MAIN(Str :$config-file = 'config.yaml') {
+    $log.info("Shelve6 starting...");
+    $log.debug("Reading configuration from $config-file...");
+    # XXX validate top level keys and that the top is a hash, and that repositories
+    # is a list
+    my %config = load-config($config-file);
 
-$log.info("Shelve6 starting...");
-$log.debug("Reading config from $config-file...");
-# XXX validate top level keys and that the top is a hash, and that repositories
-# is a list
-$config.read($config-file);
-for @($config.get<repositories>) -> $repo {
-    my $repo-object = Shelve6::Repository.new();
-    $repo-object.configure($repo);
-    push @repositories, $repo-object;
-}
-
-my $server = Shelve6::Server.new();
-$server.configure($config.get<server>);
-
-my $store-cfg = $config.get<store>;
-my $store = Shelve6::Store.new();
-$store.configure($config.get<store>);
-
-$log.debug("Starting components...");
-$store.start;
-for @repositories -> $repo {
-    $repo.register-server($server);
-    $repo.register-store($store);
-    $repo.start;
-}
-$server.start;
-
-$log.info("Application initialization complete!");
-
-signal(SIGINT).tap: {
-    $log.debug("Shutting down components...");
-    $server.stop;
-    for @repositories -> $repo {
-        $repo.stop;
+    my $store = Shelve6::Store.new(|%config<store>);
+    my $server = Shelve6::Server.new(|%config<server>);
+    my @repositories;
+    for @(%config<repositories>) -> $repo {
+        my $repo-object = Shelve6::Repository.new(:$server, :$store, |%($repo));
+        push @repositories, $repo-object;
     }
-    $store.stop;
-    $log.info("Clean shutdown, see you later!");
-    exit;
-}
 
-sleep;
+    $log.debug("Starting components...");
+    $store.start;
+    for @repositories { .start }
+    $server.start;
+
+    $log.info("Application initialization complete!");
+
+    signal(SIGINT).tap: {
+        $log.debug("Shutting down components...");
+        $server.stop;
+        for @repositories { .stop }
+        $store.stop;
+        $log.info("Clean shutdown, see you later!");
+        exit;
+    }
+
+    sleep;
+}

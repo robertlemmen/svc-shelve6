@@ -8,32 +8,18 @@ use X::Shelve6::ClientError;
 
 unit class Shelve6::Repository;
 
-has Str $!name;
-has $!authorization;
-has Str $!base-url;
-has Shelve6::Server $!server;
-has Shelve6::Store $!store;
+has $.name;
+has $.authorization;
+has $.base-url;
+has $.server;
+has $.store;
 
 my $log = Shelve6::Logging.new('repo');
 
-method configure(%options) {
-    # XXX validate and more options
-    $!name = %options<name>;
-    $!authorization = %options<authorization>;
-}
-
-method register-server($server) {
-    $!server = $server;
-    $!server.register-repo($!name, self);
-    $!base-url = $!server.base-url;
-}
-
-method register-store($store) {
-    $!store = $store;
-}
-
 method start() {
+    $!base-url = $!server.base-url;
     $log.debug("Setting up repository '$!name', reachable under '$!base-url/repos/$!name'");
+    $!server.register-repo($!name, self);
     for ('upload', 'download') -> $perm {
         my $roles = $!authorization{$perm} // ();
         if not $roles {

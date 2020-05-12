@@ -3,17 +3,12 @@ use X::Shelve6::ClientError;
 
 unit class Shelve6::Store;
 
-has $!basedir;
+has $.basedir;
 
 my $log = Shelve6::Logging.new('store');
 
-method configure(%options) {
-    # XXX validate and more options
-    $!basedir = %options<basedir>;
-}
-
 method start() {
-    $log.debug("Setting up store with file backend at '$!basedir'");
+    $log.debug("Setting up store with file backend at '{$!basedir.IO.absolute}'");
 }
 
 method stop() {
