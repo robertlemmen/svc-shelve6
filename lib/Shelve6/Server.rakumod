@@ -11,19 +11,19 @@ unit class Shelve6::Server;
 
 has $.port;
 has $.base-url;
-has $.auth-config;
+has $.authentication;
 has $!http-service;
 has %!repositories;
 
 my $log = Shelve6::Logging.new('server');
 
 my class AuthTokenToRolesResolver does Cro::HTTP::Middleware::Request {
-    has $.auth-config;
+    has $.authentication;
     method process(Supply $requests --> Supply) {
         supply whenever $requests -> $request {
             my $auth-header = $request.header('Authorization')//'';
             if $auth-header ~~ /^ 'Bearer ' $<token>=[\w+] $/ {
-                for @($!auth-config<opaque-tokens>) -> $token-config {
+                for @($!authentication<opaque-tokens>) -> $token-config {
                     if $token-config<token> eq $<token> {
                         $request.auth = Shelve6::AuthInfo.new(
                             owner => $token-config<owner>,
@@ -61,7 +61,7 @@ sub with-api-exceptions(&route-handler) {
 
 method start() {
     my $repo-routes = route {
-        before-matched AuthTokenToRolesResolver.new(:$!auth-config);
+        before-matched AuthTokenToRolesResolver.new(:$!authentication);
 
         get -> $repo-name {
             redirect "/repos/$repo-name/packages.json";
