@@ -21,6 +21,7 @@ Essentially this is a "content storage" service as described in [S22][1]
 ## Upcoming and ToDo
 
 - cucumis sextus tests
+* adress already in use error handling/reporting
 - UI to browse and manage
 - API to manage and automate
 - Local cache/proxy for other repositories, like CPAN. Could be just a cache,

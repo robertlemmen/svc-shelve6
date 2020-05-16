@@ -18,6 +18,7 @@ my sub log($severity, $ctx, $msg) {
         ~ sprintf('%-' ~ $max-ctx-width ~ 's', $ctx)
         ~ "] ["
         ~ sprintf('%-5s', $severity) ~ "] $msg";
+    $*OUT.flush;
 }
 
 method new($ctx) {

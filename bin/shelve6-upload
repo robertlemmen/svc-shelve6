@@ -97,7 +97,7 @@ if [ $EXITCODE -ne 0 ]; then
     echo "Upload failed with exit code $EXITCODE"
     exit $EXITCODE
 fi
-if [ $HTTPCODE -ne 200 ]; then
+if [ $HTTPCODE -ne 200 ] && [ $HTTPCODE -ne 204 ]; then
     echo "Upload failed with http code $HTTPCODE"
     if [ -n "$BODY" ]; then
         echo "$BODY"

@@ -32,7 +32,7 @@ method stop() {
 }
 
 method !require-permission($perm, $auth-info) {
-    my $sufficient-roles = set @($!authorization{$perm}) // ();
+    my $sufficient-roles = set @($!authorization{$perm} // ());
     my $present-roles = set ();
     my $owner-name = "unknown client";
     if $auth-info {
