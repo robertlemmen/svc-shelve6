@@ -7,7 +7,7 @@
         "Robert Lemmen <robertle@semistable.com>"
     ],
     "depends": [
-        "Cro",
+        "Cro::HTTP",
         "JSON::Fast",
         "YAMLish"
     ],
