@@ -1,0 +1,22 @@
+server:
+    port: 8080
+    base-url: "http://localhost:8080"
+    authentication:
+        opaque-tokens:
+            - token: ieng0aiCahJ9udai
+              roles: [CI]
+              owner: raku-ci-1
+            - token: Hoh5eishingievae
+              roles: [DEV, ADMIN]
+              owner: Max Mustermann <mmustermann@megacorp.com>
+            - token: Kael7ahngeithe4r
+              roles: [MIRROR]
+              owner: mirror-script
+store:
+    basedir: store
+repositories:
+    - name: p6repo
+      authorization:
+        upload: [CI, DEV, ADMIN]
+        download: [CI, DEV, ADMIN, MIRROR]
+        delete: [ADMIN]

@@ -49,11 +49,21 @@ Step /'a running shelve6 service with sample config "' (<[\w]+[.-]>+) '"'/, sub 
     await $ready-promise;
 }
 
-Step /'sending sample artifact "' (<[\w]+[.-]>+) '" via shelve6-upload'/, sub ($filename) {
+Step /'sending sample artifact "' (<[\w]+[.-]>+) '" via shelve6-upload' ' and having no token set'?/, sub ($filename) {
     $artifact-name = $filename;
     my $upload-proc = run-helper(
                 name => "shelve6-upload",
                 command => "$orig-cwd/bin/shelve6-upload $orig-cwd/features/files/$filename $base-url");
+
+    my $ret = await $upload-proc.start;
+    $upload-exitcode = $ret.exitcode;
+}
+
+Step /'sending sample artifact "' (<[\w]+[.-]>+) '" via shelve6-upload and token set to \'' (<[\w]>+) '\''/, sub ($filename, $token) {
+    $artifact-name = $filename;
+    my $upload-proc = run-helper(
+                name => "shelve6-upload",
+                command => "$orig-cwd/bin/shelve6-upload --opaque-token=$token $orig-cwd/features/files/$filename $base-url");
 
     my $ret = await $upload-proc.start;
     $upload-exitcode = $ret.exitcode;
@@ -71,7 +81,7 @@ Step /'the upload returned a non-zero exit code'/, sub () {
     }
 }
 
-Step /'"zef info" now shows a source-url matching the shelve6 config'/, sub {
+sub zef-info-step($token, $want-source) {
     my $zef-config-text = "$orig-cwd/features/files/zef-config.json".IO.slurp;
     $zef-config-text.subst(/'<TEMP_PATH>'/, $temp-path.absolute, :g);
     "$temp-path/zef-config.json".IO.spurt($zef-config-text);
@@ -86,10 +96,46 @@ Step /'"zef info" now shows a source-url matching the shelve6 config'/, sub {
                     }
                 });
 
-    await $zef-proc.start;
-    if $source-url ne "$base-url/$artifact-name" {
-        die "zef did not have correct source-url for uploaded artifact";
+    CATCH {
+        when X::Proc::Unsuccessful {
+            # this is fine, we only care whether we do get a source-url or not
+            diag .message
+        }
     }
+
+    if $token {
+        await $zef-proc.start(ENV => %*ENV.append('SHELVE6_OPAQUE_TOKEN' => $token));
+    }
+    else {
+        await $zef-proc.start;
+    }
+
+    if $want-source {
+        if $source-url ne "$base-url/$artifact-name" {
+            die "zef did not have correct source-url for uploaded artifact";
+        }
+    }
+    else {
+        if $source-url eq "$base-url/$artifact-name" {
+            die "zef did have source-url for uploaded artifact, unexpected";
+        }
+    }
+}
+
+Step /'"zef info" now shows a source-url matching the shelve6 config'/, sub {
+    zef-info-step(Nil, True);
+}
+
+Step /'"zef info" without token does not show a source-url matching the shelve6 config'/, sub {
+    zef-info-step(Nil, False);
+}
+
+Step /'"zef info" with token \'' (<[\w]>+) '\' does not show a source-url matching the shelve6 config'/, sub ($token) {
+    zef-info-step($token, False);
+}
+
+Step /'"zef info" with token \'' (<[\w]>+) '\' now shows a source-url matching the shelve6 config'/, sub ($token) {
+    zef-info-step($token, True);
 }
 
 After sub ($feature, $scenario) {

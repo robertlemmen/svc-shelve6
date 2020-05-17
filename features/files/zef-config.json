@@ -61,6 +61,18 @@
             "module" : "Zef::Service::FetchPath"
         },
         {
+            "short-name" : "authenticated-download",
+            "module" : "Zef::Service::AuthenticatedDownload",
+            "options" : { 
+                "configured-hosts" : [
+                    {
+                        "hostname" : "localhost",
+                        "auth-type" : "opaque-token"
+                    }
+                ]
+            }
+        },
+        {
             "short-name" : "curl",
             "module" : "Zef::Service::Shell::curl"
         },
