@@ -1,7 +1,7 @@
 {
     "perl": "6.c",
     "name": "Shelve6",
-    "version": "0.1",
+    "version": "0.2",
     "description": "Artifact repository for Perl 6 and friends",
     "authors": [
         "Robert Lemmen <robertle@semistable.com>"
